@@ -1,86 +1,3 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Convert text inputs to lowercase and no spaces
-    const textInputs = document.querySelectorAll('input[type="text"], textarea');
-    textInputs.forEach(input => {
-        input.addEventListener('input', () => {
-            input.value = input.value.toLowerCase().replace(/\s/g, '_');
-        });
-    });
-
-    // Initialize collapsible sections
-    const collapsibles = document.querySelectorAll('.collapsible');
-    collapsibles.forEach(coll => {
-        coll.addEventListener('click', function() {
-            this.classList.toggle('active');
-            const content = this.nextElementSibling;
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                content.style.display = 'block';
-            }
-        });
-    });
-     // Automatically open manifest and advanced settings
-    toggleManifest();
-    toggleAdvancedSettings();
-
-});
-
-function toggleManifest() {
-    const content = document.getElementById('manifest-section');
-    if (content.style.display === "block") {
-        content.style.display = "none";
-    } else {
-        content.style.display = "block";
-    }
-}
-function toggleAdvancedSettings() {
-    const content = document.getElementById('advanced-settings');
-     if (content.style.display === "block") {
-        content.style.display = "none";
-    } else {
-        content.style.display = "block";
-    }
-}
-
-
-function showOptions() {
-    const type = document.querySelector('input[name="addon_type"]:checked').value;
-    const allOptions = document.querySelectorAll('.addon-options');
-    allOptions.forEach(option => option.style.display = 'none');
-
-    document.getElementById('download-mcaddon').disabled = true;
-
-    if (type === 'recipes') {
-        document.getElementById('recipes-options').style.display = 'block';
-    } else if (type === 'loot') {
-        document.getElementById('loot-options').style.display = 'block';
-    } else if (type === 'entities') {
-        document.getElementById('entities-options').style.display = 'block';
-    } else if (type === 'manual') {
-        document.getElementById('manual-options').style.display = 'block';
-        document.getElementById('download-mcaddon').disabled = false;
-    }
-}
-
-function addFolder() {
-    const container = document.getElementById('new-folders-container');
-    const folderId = `new-folder-${container.children.length}`;
-    const newFolderHTML = `
-        <div id="${folderId}" class="section-box">
-            <label>Folder Name: <input type="text" class="new-folder-name" placeholder="namespace"></label>
-            <label>Upload Files: <input type="file" class="new-folder-files" multiple accept=".json"></label>
-        </div>`;
-    container.insertAdjacentHTML('beforeend', newFolderHTML);
-}
-
-function generateUuid() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
 async function downloadAddon(packType) {
     const packName = document.getElementById('pack-name').value.trim() || 'my_addon';
     const description = document.getElementById('description').value.trim() || 'flowers_smells_good';
@@ -89,9 +6,36 @@ async function downloadAddon(packType) {
     if (!minVersion) {
         minVersion = "1, 21, 0";
     }
-    
+
     const zip = new JSZip();
     const bp = zip.folder(`${packName}_[bp]`);
+
+    // --- ICON HANDLING (UPLOADED OR DEFAULT) ---
+    const packIconFile = document.getElementById('pack-icon').files[0];
+    let iconData = null;
+
+    if (packIconFile) {
+        // Use the user's uploaded icon
+        iconData = packIconFile;
+    } else {
+        // Fetch the default icon if none is uploaded
+        try {
+            const response = await fetch('images/thumbs/pack_icon.png');
+            if (response.ok) {
+                iconData = await response.blob();
+            } else {
+                console.error('Default pack_icon.png not found.');
+            }
+        } catch (error) {
+            console.error('Error fetching default pack_icon.png:', error);
+        }
+    }
+
+    // Add the icon to the Behavior Pack if it exists
+    if (iconData) {
+        bp.file('pack_icon.png', iconData);
+    }
+    // ------------------------------------------
 
     // Manifest
     const manifest = {
@@ -134,16 +78,6 @@ DISCORD: https://discord.gg/jx4p9x9fQv
     • What else this does? -> You can make a custom empty add-on (.mcaddon)
     • Do Creator has other usefull websites or addon maker?  ->   For other useful thing first join my discord server then   (https://discord.com/channels/1282722925887094918/1379105086135074846)   open this! [Hidden channel]`;
     bp.file('pack_info.txt', packInfo);
-    
-     // Pack Icon
-    const packIconFile = document.getElementById('pack-icon').files[0];
-    if (packIconFile) {
-        bp.file('pack_icon.png', packIconFile);
-    } else {
-        // In a real scenario, you'd fetch a default image.
-        // For this example, we'll skip adding it if not provided.
-        console.log("No pack icon uploaded, skipping.");
-    }
 
     const type = document.querySelector('input[name="addon_type"]:checked')?.value;
 
@@ -200,8 +134,10 @@ DISCORD: https://discord.gg/jx4p9x9fQv
         rpManifest.modules[0].type = "resources";
         rpManifest.modules[0].uuid = generateUuid();
         rp.file('manifest.json', JSON.stringify(rpManifest, null, "\t"));
-        if (packIconFile) {
-            rp.file('pack_icon.png', packIconFile);
+        
+        // Add the icon to the Resource Pack if it exists
+        if (iconData) {
+            rp.file('pack_icon.png', iconData);
         }
 
         document.querySelectorAll('.rp-folder:checked').forEach(cb => rp.folder(cb.value));
@@ -212,7 +148,6 @@ DISCORD: https://discord.gg/jx4p9x9fQv
         const customBpFolder = document.getElementById('bp-custom-folder').value.trim();
         if(customBpFolder) bp.folder(customBpFolder);
         
-        // Handle json files
          document.querySelectorAll('.rp-json:checked').forEach(cb => {
             const fileName = cb.value;
             let content = '{}'; // Default empty json
@@ -221,7 +156,6 @@ DISCORD: https://discord.gg/jx4p9x9fQv
              if (fileName === 'item_texture.json') content = `{"resource_pack_name": "${packName}", "texture_name": "atlas.items", "texture_data": {"custom:item_name": {"textures": "textures/folder_name/item_name"}}}`;
              if (fileName === 'flipbook_textures.json') content = `[{"flipbook_texture": "textures/blocks/block_name", "atlas_tile": "block_name", "atlas_index": 1, "ticks_per_frame": 3}]`;
              if (fileName === 'music_definitions.json') content = `{"biome_name": {"event_name": "music.game.biome_name", "min_delay": 60, "max_delay": 180}}`;
-
             rp.file(fileName, content);
         });
     }
@@ -230,7 +164,7 @@ DISCORD: https://discord.gg/jx4p9x9fQv
     zip.generateAsync({type:"blob"}).then(function(content) {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
-        link.download = `${packName}.${packType}.zip`; // Append .zip as per instruction
+        link.download = `${packName}.${packType}.zip`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
