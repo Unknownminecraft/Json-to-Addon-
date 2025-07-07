@@ -103,7 +103,7 @@ async function downloadAddon(packType) {
     } else {
         // Fetch the default icon if none is uploaded
         try {
-            const response = await fetch('assets/images/pack_icon.png');
+            const response = await fetch('pack_icon.png');
             if (response.ok) {
                 iconData = await response.blob();
             } else {
