@@ -152,14 +152,15 @@ YOUTUBE: https://youtube.com/@decodingmnetwork?si=gEvoBZJ4OfQlgWpq
 MCPEDL: mcpedl.com/user/unknown-minecraft/
 GITHUB: https://github.com/Unknownminecraft
 DISCORD: https://discord.gg/jx4p9x9fQv
-                                     ╒                   ╕
+                                     ╒                          ╕
 〰〰〰〰〰〰〰〰〰〰 │|   Pack   info |│〰〰〰〰〰〰〰〰〰〰
-                                     ╘                   ╛
+                                     ╘                          ╛
     • website name= Json to addon
     • How to find? -> you will find this from my GitHub repository. (Why link not mentioned -> because it may change in future)
     • What this website does? -> This simply collect the json files and turn them into Minecraft addon.
     • What else this does? -> You can make a custom empty add-on (.mcaddon)
-    • Do Creator has other usefull websites or addon maker?  ->   For other useful thing first join my discord server then   (https://discord.com/channels/1282722925887094918/1379105086135074846)   open this! [Hidden channel]`;
+    • Do Creator has other usefull websites or addon maker?  ->   For other useful thing first join my discord server then   (https://discord.com/channels/1282722925887094918/1379105086135074846)   open this! [Hidden channel]
+     - - - - - - - - - - - - - - -generated from Json to Addon`;
     bp.file('pack_info.txt', packInfo);
 
     const type = document.querySelector('input[name="addon_type"]:checked')?.value;
